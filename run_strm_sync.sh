@@ -11,10 +11,18 @@ log() { echo "[$(date '+%Y-%m-%d %H:%M:%S')] $*" | tee -a "$LOG"; }
 
 log "=== STRM Sync started ==="
 
+total_created=0
+total_orphans=0
+total_folders=0
+
 for mapping in "${SLG_LIBRARIES[@]}"; do
     source_root="${mapping%%:*}"
     strm_root="${mapping##*:}"
     log "Processing: $source_root -> $strm_root"
+
+    count_created=0
+    count_orphans=0
+    count_folders=0
 
     # Pass 1: create missing .strm files
     while IFS= read -r -d '' source_file; do
@@ -26,6 +34,7 @@ for mapping in "${SLG_LIBRARIES[@]}"; do
             mkdir -p "$strm_dir"
             echo "$source_file" > "$strm_file"
             log "[+] Created: $strm_file"
+            (( count_created++ ))
         fi
     done < <(find "$source_root" -type f -print0)
 
@@ -43,6 +52,7 @@ for mapping in "${SLG_LIBRARIES[@]}"; do
         if [[ "$found" == "false" ]]; then
             rm -f "$strm_file"
             log "[-] Removed orphan: $strm_file"
+            (( count_orphans++ ))
         fi
     done < <(find "$strm_root" -type f -name "*.strm" -print0)
 
@@ -52,9 +62,23 @@ for mapping in "${SLG_LIBRARIES[@]}"; do
         if [[ ! -d "$source_root/$relative" ]]; then
             rm -rf "$strm_dir"
             log "[-] Removed folder: $strm_dir"
+            (( count_folders++ ))
         fi
     done < <(find "$strm_root" -mindepth 1 -type d | sort -r)
+
+    log "--- Summary: $source_root -> $strm_root"
+    log "    Created:         $count_created STRM file(s)"
+    log "    Removed orphans: $count_orphans STRM file(s)"
+    log "    Removed folders: $count_folders"
+    log ""
+
+    (( total_created += count_created ))
+    (( total_orphans += count_orphans ))
+    (( total_folders += count_folders ))
 
 done
 
 log "=== STRM Sync finished ==="
+log "    Total created:         $total_created STRM file(s)"
+log "    Total removed orphans: $total_orphans STRM file(s)"
+log "    Total removed folders: $total_folders"
