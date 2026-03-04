@@ -5,7 +5,7 @@ After=network.target local-fs.target
 [Service]
 Type=simple
 User=root
-ExecStart=/bin/bash /usr/local/scripts/StrmLibGenerator/_watcher.sh
+ExecStart=/bin/bash {{SLG_SCRIPT_DIR}}/_watcher.sh
 Restart=on-failure
 RestartSec=10
 
