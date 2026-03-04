@@ -1,0 +1,13 @@
+[Unit]
+Description=StrmLibGenerator Watcher (slg_watcher)
+After=network.target local-fs.target
+
+[Service]
+Type=simple
+User=root
+ExecStart=/bin/bash /usr/local/scripts/StrmLibGenerator/_watcher.sh
+Restart=on-failure
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target
